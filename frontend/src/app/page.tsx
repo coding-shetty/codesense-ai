@@ -1,0 +1,139 @@
+"use client";
+
+import React, { useState } from 'react';
+import Sidebar from '../components/sidebar';
+import CodeCanvas from '../components/editor';
+import PipelineVisualizer from '../components/pipeline-visualizer';
+import ReportView from '../components/report-view';
+import { streamCodeAnalysis } from '../lib/api-client';
+import { useKeyboardShortcut } from '../hooks/use-keyboard';
+import { Play, ShieldAlert, Sparkles, Flame } from 'lucide-react';
+
+export default function EngineeringDashboard() {
+  const [sourceCode, setSourceCode] = useState<string>(
+    `def compute_hash(payload):\n    # Deep nesting smell check\n    for item in payload:\n        if item['valid'] == True:\n            if 'secret' in item:\n                # Critical bug: Hardcoded access vector token\n                auth_key = "AI_KEY_SECRET_V1_TOKEN"\n                return auth_key\n    return None`
+  );
+  
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [pipelineStage, setPipelineStage] = useState<'idle' | 'parsing' | 'scanning' | 'generation' | 'complete'>('idle');
+  const [metrics, setMetrics] = useState<any>(null);
+  const [aiReportStream, setAiReportStream] = useState<string>("");
+  const [mentorMode, setMentorMode] = useState<boolean>(false);
+
+  const runAnalysisPipeline = async () => {
+    if (!sourceCode.trim()) return;
+    
+    setIsAnalyzing(true);
+    setAiReportStream("");
+    setMetrics(null);
+    setPipelineStage('parsing');
+
+    await streamCodeAnalysis(sourceCode, "crypto_service.py", mentorMode, {
+      onMetrics: (data: any) => {
+        setPipelineStage('scanning');
+        setMetrics(data);
+      },
+      onStatus: () => {
+        setPipelineStage('generation');
+      },
+      onChunk: (chunk: string) => {
+        setAiReportStream(prev => prev + chunk);
+      },
+      onError: (err: any) => {
+        console.error("Pipeline failure: ", err);
+        setIsAnalyzing(false);
+        setPipelineStage('idle');
+      }
+    });
+
+    setIsAnalyzing(false);
+    setPipelineStage('complete');
+  };
+
+  // Bind premium 'Cmd+Enter' or 'Ctrl+Enter' key shortcut behavior
+  useKeyboardShortcut('Enter', true, runAnalysisPipeline);
+
+  return (
+    <div className="flex h-screen w-screen bg-zinc-950 text-zinc-100 font-sans antialiased overflow-hidden">
+      <Sidebar />
+
+      <main className="flex-1 flex overflow-hidden">
+        {/* Left Side: Monaco Editor Canvas */}
+        <section className="flex-1 p-6 flex flex-col space-y-4 h-full">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-base font-semibold tracking-tight">Code Evaluation Studio</h1>
+              <p className="text-[11px] text-zinc-500">Run safe, isolated AST diagnostics and streaming AI reasoning matrices instantly.</p>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 px-3 py-1.5 bg-zinc-900/60 border border-zinc-800 rounded-lg">
+                <span className="text-[10px] uppercase font-mono text-zinc-400">Mentor Engine</span>
+                <input 
+                  type="checkbox" 
+                  checked={mentorMode} 
+                  onChange={(e) => setMentorMode(e.target.checked)} 
+                  className="w-6 h-3.5 accent-indigo-500 cursor-pointer" 
+                />
+              </div>
+
+              <button
+                onClick={runAnalysisPipeline}
+                disabled={isAnalyzing}
+                className="flex items-center space-x-1.5 px-4 py-1.5 bg-zinc-100 hover:bg-zinc-200 disabled:opacity-50 text-zinc-950 font-semibold text-xs rounded-lg shadow-md transition-all"
+              >
+                <Play size={10} fill="currentColor" />
+                <span>{isAnalyzing ? "Processing..." : "Run Analysis"}</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 relative">
+            <CodeCanvas language="python" value={sourceCode} onChange={(val: string | undefined) => setSourceCode(val || "")} />
+          </div>
+        </section>
+
+        {/* Right Side: Analytical Output Inspector */}
+        <section className="w-[460px] border-l border-zinc-800/60 bg-zinc-900/10 backdrop-blur-3xl p-6 flex flex-col space-y-5 overflow-y-auto h-full">
+          <PipelineVisualizer currentStage={pipelineStage} />
+
+          {metrics && (
+            <div className="space-y-3 animate-fadeIn">
+              {/* Complexity Metric Dashboard Card */}
+              <div className="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/60 flex items-start space-x-3">
+                <Sparkles className="text-indigo-400 mt-0.5" size={14} />
+                <div className="space-y-0.5">
+                  <div className="text-xs font-semibold">Cyclomatic Branch Weight: {metrics.complexity.cyclomatic_complexity}</div>
+                  <div className="text-[10px] text-zinc-500 font-mono">{metrics.complexity.rating}</div>
+                </div>
+              </div>
+
+              {/* Security Alerts Stack */}
+              {metrics.findings.length > 0 && (
+                <div className="p-4 rounded-xl bg-red-950/10 border border-red-900/20 space-y-2">
+                  <div className="flex items-center space-x-1.5 text-xs font-semibold text-red-400">
+                    <ShieldAlert size={12} />
+                    <span>Security Scanner Highlights ({metrics.findings.length})</span>
+                  </div>
+                  <div className="space-y-1">
+                    {metrics.findings.map((item: any, i: number) => (
+                      <div key={i} className="text-[10px] font-mono text-zinc-400 bg-zinc-950/50 p-2 rounded border border-red-950/20 flex items-start space-x-1">
+                        <Flame size={12} className="text-red-500 shrink-0 mt-0.5" />
+                        <span>Line {item.line}: {item.type}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* AI Blueprint Container Section */}
+          <div className="flex-1 bg-zinc-900/30 rounded-xl p-4 border border-zinc-800/40 overflow-hidden flex flex-col shadow-inner">
+            <ReportView content={aiReportStream} />
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
