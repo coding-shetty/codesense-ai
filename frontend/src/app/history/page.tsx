@@ -11,7 +11,7 @@ export default function HistoryDashboard() {
   useEffect(() => {
     async function loadPastHistory() {
       try {
-        const res = await fetch('http://localhost:8000/api/v1/analyze/history/default-local-user');
+        const res = await fetch('http://localhost:8000/api/v1/history/default-local-user');
         const payload = await res.json();
         if (payload.status === "success") {
           setHistoryItems(payload.data);
