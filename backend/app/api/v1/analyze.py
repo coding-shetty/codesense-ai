@@ -2,6 +2,7 @@ import json
 import asyncio
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+from typing import Optional
 from pydantic import BaseModel
 from app.engines.complexity import calculate_cyclomatic_complexity
 from app.engines.static_analyzer import scan_security_and_smells
@@ -13,8 +14,7 @@ class AnalysisRequest(BaseModel):
     source_code: str
     file_name: str
     mentor_mode: bool = False
-from typing import Optional
-provider_override: Optional[str] = None
+    provider_override: Optional[str] = None
 
 @router.post("/stream")
 async def process_analysis_stream(request: AnalysisRequest):
