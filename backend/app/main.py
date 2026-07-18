@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import analyze, settings, repo
+from app.api.v1 import analyze, settings, repo, history
 
 app = FastAPI(
     title="CodeSense AI Engine Services",
@@ -21,6 +21,7 @@ app.add_middleware(
 app.include_router(analyze.router, prefix="/api/v1/analyze", tags=["Analysis Orchestrator"])
 app.include_router(settings.router, prefix="/api/v1/settings", tags=["Configuration Vaults"])
 app.include_router(repo.router, prefix="/api/v1/repo", tags=["Repository Aggregators"])
+app.include_router(history.router, prefix="/api/v1/history", tags=["Analysis History"])
 
 @app.get("/health")
 def verify_system_status():
