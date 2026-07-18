@@ -20,7 +20,8 @@ export async function streamCodeAnalysis(
       body: JSON.stringify({
         source_code: sourceCode,
         file_name: fileName,
-        mentor_mode: mentorMode
+        mentor_mode: mentorMode,
+        user_id: "default-local-user"
       })
     });
 
@@ -32,6 +33,7 @@ export async function streamCodeAnalysis(
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
+    let currentEvent = "";
 
     while (true) {
       const { value, done } = await reader.read();
@@ -45,24 +47,27 @@ export async function streamCodeAnalysis(
         const cleanLine = line.trim();
         if (!cleanLine) continue;
 
-        if (cleanLine.startsWith('data: ')) {
+        if (cleanLine.startsWith('event: ')) {
+          currentEvent = cleanLine.slice(7).trim();
+        } else if (cleanLine.startsWith('data: ')) {
           const rawData = cleanLine.slice(6).trim();
           try {
             const parsed = JSON.parse(rawData);
             
-            // Check cross-reference event headers via string tracking or explicit frames
-            if (line.includes('structural_metrics') || parsed.complexity) {
+            // Coordinate event routing using the active currentEvent type
+            if (currentEvent === 'structural_metrics' || parsed.complexity) {
               callbacks.onMetrics(parsed);
-            } else if (line.includes('status')) {
+            } else if (currentEvent === 'status' || parsed.message) {
               callbacks.onStatus(parsed);
-            } else if (parsed.chunk) {
+            } else if (currentEvent === 'ai_stream' || parsed.chunk) {
               callbacks.onChunk(parsed.chunk);
-            } else if (parsed.detail) {
+            } else if (currentEvent === 'system_error' || parsed.detail) {
               callbacks.onError(parsed.detail);
             }
           } catch (e) {
             // Suppress intermediate chunk noise gracefully
           }
+          currentEvent = ""; // Reset for next SSE frame
         }
       }
     }
