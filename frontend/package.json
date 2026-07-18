@@ -12,8 +12,8 @@
     "@monaco-editor/react": "^4.6.0",
     "clsx": "^2.1.1",
     "framer-motion": "^11.0.3",
-    "lucide-react": "^0.323.0",
-    "next": "15.0.0",
+    "lucide-react": "^0.400.0",
+    "next": "^15.5.20",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "tailwind-merge": "^2.3.0"
