@@ -2,3 +2,29 @@ node_modules/
 .venv/
 __pycache__/
 .env
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+.env.local
+frontend/.env.local
+
+# Next.js
+.next/
+frontend/.next/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*

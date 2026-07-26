@@ -108,6 +108,34 @@ export default function EngineeringDashboard() {
                 </div>
               </div>
 
+              {/* AST Structure Card */}
+              {metrics.ast_structure && (
+                <div className="p-4 rounded-xl bg-zinc-900/40 border border-zinc-800/60 flex items-start space-x-3">
+                  <Sparkles className="text-indigo-400 mt-0.5" size={14} />
+                  <div className="space-y-1.5 w-full">
+                    <div className="text-xs font-semibold">Structural Code Signatures</div>
+                    <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-zinc-400 mt-1">
+                      <div className="bg-zinc-950/60 p-2 rounded border border-zinc-800/50 flex justify-between">
+                        <span>Functions:</span>
+                        <span className="text-indigo-400 font-bold">{metrics.ast_structure.function_declarations}</span>
+                      </div>
+                      <div className="bg-zinc-950/60 p-2 rounded border border-zinc-800/50 flex justify-between">
+                        <span>Classes:</span>
+                        <span className="text-indigo-400 font-bold">{metrics.ast_structure.class_declarations}</span>
+                      </div>
+                      <div className="bg-zinc-950/60 p-2 rounded border border-zinc-800/50 flex justify-between">
+                        <span>Loops:</span>
+                        <span className="text-indigo-400 font-bold">{metrics.ast_structure.loops_count}</span>
+                      </div>
+                      <div className="bg-zinc-950/60 p-2 rounded border border-zinc-800/50 flex justify-between">
+                        <span>Max Depth:</span>
+                        <span className="text-indigo-400 font-bold">{metrics.ast_structure.max_indentation_depth}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Security Alerts Stack */}
               {metrics.findings.length > 0 && (
                 <div className="p-4 rounded-xl bg-red-950/10 border border-red-900/20 space-y-2">

@@ -11,6 +11,7 @@ from app.db.base import get_db
 from app.db.models import UserSettingsModel, AnalysisHistoryModel, UserModel
 from app.engines.complexity import calculate_cyclomatic_complexity
 from app.engines.static_analyzer import scan_security_and_smells
+from app.engines.ast_parser import parse_ast_structural_signatures, detect_language_with_confidence
 from app.core.llm import get_llm_client_and_route, stream_ai_reasoning
 
 router = APIRouter()
@@ -34,13 +35,15 @@ async def process_analysis_stream(request: AnalysisRequest, db: Session = Depend
     # 1. Immediate local computation tasks
     complexity = calculate_cyclomatic_complexity(request.source_code)
     vulnerabilities = scan_security_and_smells(request.source_code)
+    ast_structure = parse_ast_structural_signatures(request.source_code)
     
     # 2. Extract context signature details 
-    ext = request.file_name.split('.')[-1] if '.' in request.file_name else 'unknown'
+    language_info = detect_language_with_confidence(request.source_code, request.file_name)
+    ext = language_info.get("language", "plaintext")
 
     async def event_generator():
         # Yield metadata frames first
-        yield f"event: structural_metrics\ndata: {json.dumps({'complexity': complexity, 'findings': vulnerabilities, 'inferred_type': ext})}\n\n"
+        yield f"event: structural_metrics\ndata: {json.dumps({'complexity': complexity, 'findings': vulnerabilities, 'ast_structure': ast_structure, 'inferred_type': ext})}\n\n"
         await asyncio.sleep(0.1) # Smooth frame buffer separation
 
         # Assemble prompt text enriched with metadata
@@ -116,9 +119,9 @@ async def process_analysis_stream(request: AnalysisRequest, db: Session = Depend
                 user_id=request.user_id,
                 file_name=request.file_name,
                 language=ext,
-                confidence=1.0,
+                confidence=language_info.get("confidence", 1.0),
                 source_code=request.source_code,
-                ast_metadata=json.dumps({'complexity': complexity, 'findings': vulnerabilities}),
+                ast_metadata=json.dumps({'complexity': complexity, 'findings': vulnerabilities, 'ast_structure': ast_structure}),
                 report_json=json.dumps({'report': "".join(full_ai_response)}),
                 score_overall=max(30, 100 - complexity.get('cyclomatic_complexity', 0))
             )

@@ -22,12 +22,8 @@
   <rect width="1280" height="320" fill="url(#grid)"/>
   <ellipse cx="1040" cy="60" rx="380" ry="220" fill="url(#glow)"/>
 
-  <!-- code bracket mark -->
-  <g transform="translate(96,110)" fill="none" stroke="#a5b4fc" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M28 0 L2 50 L28 100"/>
-    <path d="M78 0 L104 50 L78 100" stroke="#6366f1"/>
-    <line x1="60" y1="-8" x2="46" y2="108" stroke="#e0e7ff" stroke-width="5"/>
-  </g>
+  <!-- project logo -->
+  <image href="logo.png" x="96" y="108" width="104" height="104" />
 
   <!-- title -->
   <text x="250" y="150" font-family="Menlo, Consolas, monospace" font-size="58" font-weight="700" fill="#fafafa">CodeSense<tspan fill="#818cf8"> AI</tspan></text>

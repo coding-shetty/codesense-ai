@@ -66,3 +66,38 @@ async def update_preferences(payload: SettingsUpdateRequest, db: Session = Depen
     
     db.commit()
     return {"status": "success", "message": "Global execution parameters applied."}
+
+@router.get("/{user_id}")
+async def get_user_settings(user_id: str, db: Session = Depends(get_db)):
+    """Fetches user preferences and reports which provider API keys are configured (vaulted) securely."""
+    settings_rec = db.query(UserSettingsModel).filter(UserSettingsModel.user_id == user_id).first()
+    
+    # Initialize defaults if settings record does not exist yet
+    default_provider = "ollama"
+    default_model = "qwen2.5-coder"
+    vault_status = {
+        "openai": False,
+        "anthropic": False,
+        "gemini": False,
+        "openrouter": False
+    }
+    
+    if settings_rec:
+        default_provider = settings_rec.default_provider or "ollama"
+        default_model = settings_rec.default_model or "qwen2.5-coder"
+        try:
+            keys = decrypt_api_keys(settings_rec.encrypted_keys)
+            for provider_name in vault_status.keys():
+                if keys.get(provider_name):
+                    vault_status[provider_name] = True
+        except Exception:
+            pass # Suppress recovery/cipher errors gracefully
+            
+    return {
+        "status": "success",
+        "data": {
+            "default_provider": default_provider,
+            "default_model": default_model,
+            "vault_status": vault_status
+        }
+    }

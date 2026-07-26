@@ -20,7 +20,7 @@ export default function Sidebar() {
   return (
     <aside className="w-64 border-r border-white/5 bg-zinc-950/40 backdrop-blur-md flex flex-col p-6 h-screen relative z-20">
       <div className="flex items-center space-x-3 mb-8">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center font-bold text-sm shadow-md shadow-indigo-500/20 text-white font-mono">Ω</div>
+        <img src="/logo.png" alt="CodeSense AI Logo" className="w-8 h-8 object-contain rounded-lg" />
         <span className="font-semibold text-sm tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-zinc-100 to-zinc-400">CodeSense AI</span>
       </div>
       

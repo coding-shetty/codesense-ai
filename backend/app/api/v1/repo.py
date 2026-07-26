@@ -2,7 +2,6 @@ import httpx
 import base64
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.engines.ast_parser import detect_language_with_confidence
 
 router = APIRouter()
 
