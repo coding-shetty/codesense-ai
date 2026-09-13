@@ -1,9 +1,11 @@
-import React from 'react';
-import './globals.css'; // Verify this file imports Tailwind styles
+import React from "react";
+import "./globals.css";
+import ErrorBoundary from "../components/error-boundary";
 
 export const metadata = {
-  title: 'CodeSense AI - High Performance Code Analytics Platform',
-  description: 'Deterministic AST Metrics and Adaptive Stream Reasoning Interface Studio Layout Engine.',
+  title: "CodeSense AI - High Performance Code Analytics Platform",
+  description:
+    "Deterministic AST Metrics and Adaptive Stream Reasoning Interface Studio Layout Engine.",
 };
 
 export default function SystemRootLayout({ children }: { children: React.ReactNode }) {
@@ -14,7 +16,7 @@ export default function SystemRootLayout({ children }: { children: React.ReactNo
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/5 rounded-full blur-[120px] pointer-events-none z-0" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-violet-600/5 rounded-full blur-[120px] pointer-events-none z-0" />
         <div className="relative z-10 w-full h-full">
-          {children}
+          <ErrorBoundary>{children}</ErrorBoundary>
         </div>
       </body>
     </html>

@@ -1,32 +1,43 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Key, ShieldCheck, Cpu, Sliders, CheckCircle2, XCircle } from 'lucide-react';
-import Sidebar from '../../components/sidebar';
+import React, { useState, useEffect } from "react";
+import {
+  Key,
+  ShieldCheck,
+  Cpu,
+  Sliders,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
+import Sidebar from "../../components/sidebar";
+import { apiUrl, apiHeaders } from "../../lib/config";
 
 export default function AdvancedSettingsView() {
   const [provider, setProvider] = useState("openai");
   const [apiKey, setApiKey] = useState("");
   const [isVaulting, setIsVaulting] = useState(false);
   const [statusMsg, setStatusMsg] = useState("");
-  
+
   // Settings preferences state
   const [defaultProvider, setDefaultProvider] = useState("ollama");
   const [defaultModel, setDefaultModel] = useState("qwen2.5-coder");
   const [isSavingPref, setIsSavingPref] = useState(false);
   const [prefStatusMsg, setPrefStatusMsg] = useState("");
-  
+
   // Key vault check status
   const [vaultStatus, setVaultStatus] = useState<Record<string, boolean>>({
     openai: false,
-    anthropic: false,
     gemini: false,
-    openrouter: false
+    openrouter: false,
   });
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/settings/default-local-user');
+      const res = await fetch(
+        apiUrl("/api/v1/settings/default-local-user"),
+        { headers: apiHeaders() }
+      );
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
       const payload = await res.json();
       if (payload.status === "success" && payload.data) {
         setDefaultProvider(payload.data.default_provider);
@@ -48,22 +59,22 @@ export default function AdvancedSettingsView() {
     if (!apiKey.trim()) return;
     setIsVaulting(true);
     setStatusMsg("");
-    
+
     try {
-      const res = await fetch('http://localhost:8000/api/v1/settings/keys', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch(apiUrl("/api/v1/settings/keys"), {
+        method: "POST",
+        headers: apiHeaders(),
         body: JSON.stringify({
           user_id: "default-local-user",
           provider: provider,
-          api_key: apiKey
-        })
+          api_key: apiKey,
+        }),
       });
       const data = await res.json();
       if (data.status === "success") {
         setStatusMsg("Credentials encrypted and saved successfully.");
         setApiKey("");
-        fetchSettings(); // Refresh keys vaulted status
+        await fetchSettings(); // Refresh vaulted status
       } else {
         setStatusMsg("Vault synchronization rejected.");
       }
@@ -78,14 +89,14 @@ export default function AdvancedSettingsView() {
     setIsSavingPref(true);
     setPrefStatusMsg("");
     try {
-      const res = await fetch('http://localhost:8000/api/v1/settings/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch(apiUrl("/api/v1/settings/update"), {
+        method: "POST",
+        headers: apiHeaders(),
         body: JSON.stringify({
           user_id: "default-local-user",
           default_provider: defaultProvider,
-          default_model: defaultModel
-        })
+          default_model: defaultModel,
+        }),
       });
       const data = await res.json();
       if (data.status === "success") {
@@ -106,8 +117,13 @@ export default function AdvancedSettingsView() {
       <main className="flex-1 p-8 overflow-y-auto space-y-6">
         <div className="max-w-3xl mx-auto space-y-8">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">System Infrastructure Vault</h1>
-            <p className="text-xs text-zinc-500">Manage hardware routing arrays, backend configurations, and zero-leak cryptographic credentials.</p>
+            <h1 className="text-xl font-semibold tracking-tight">
+              System Infrastructure Vault
+            </h1>
+            <p className="text-xs text-zinc-500">
+              Manage hardware routing arrays, backend configurations, and zero-leak cryptographic
+              credentials.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -120,24 +136,27 @@ export default function AdvancedSettingsView() {
 
               <div className="space-y-4">
                 <div className="flex flex-col space-y-1.5">
-                  <label className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Target Hardware Engine Infrastructure</label>
-                  <select 
-                    value={provider} 
+                  <label className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
+                    Target Hardware Engine Infrastructure
+                  </label>
+                  <select
+                    value={provider}
                     onChange={(e) => setProvider(e.target.value)}
                     className="bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs font-mono focus:outline-none focus:border-indigo-500 transition-all text-zinc-200"
                   >
                     <option value="openai">OpenAI Production Clusters</option>
-                    <option value="anthropic">Anthropic Claude Engines</option>
                     <option value="gemini">Google Gemini Web Pipeline</option>
                     <option value="openrouter">OpenRouter Unified Aggregator</option>
                   </select>
                 </div>
 
                 <div className="flex flex-col space-y-1.5">
-                  <label className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Secret Security Key Input</label>
-                  <input 
-                    type="password" 
-                    placeholder="sk-........................................" 
+                  <label className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
+                    Secret Security Key Input
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="sk-........................................"
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
                     className="bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs font-mono focus:outline-none focus:border-indigo-500 transition-all text-zinc-200"
@@ -170,25 +189,28 @@ export default function AdvancedSettingsView() {
 
               <div className="space-y-4">
                 <div className="flex flex-col space-y-1.5">
-                  <label className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Default Model Provider</label>
-                  <select 
-                    value={defaultProvider} 
+                  <label className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
+                    Default Model Provider
+                  </label>
+                  <select
+                    value={defaultProvider}
                     onChange={(e) => setDefaultProvider(e.target.value)}
                     className="bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs font-mono focus:outline-none focus:border-indigo-500 transition-all text-zinc-200"
                   >
                     <option value="ollama">Ollama (Offline Local Fallback)</option>
                     <option value="openai">OpenAI Production</option>
-                    <option value="anthropic">Anthropic Claude</option>
                     <option value="gemini">Google Gemini</option>
                     <option value="openrouter">OpenRouter Aggregator</option>
                   </select>
                 </div>
 
                 <div className="flex flex-col space-y-1.5">
-                  <label className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Default Active Model</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. gpt-4o, claude-3-5-sonnet-20241022, gemini-1.5-flash" 
+                  <label className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
+                    Default Active Model
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. gpt-4o, gemini-1.5-flash"
                     value={defaultModel}
                     onChange={(e) => setDefaultModel(e.target.value)}
                     className="bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs font-mono focus:outline-none focus:border-indigo-500 transition-all text-zinc-200"
@@ -215,10 +237,15 @@ export default function AdvancedSettingsView() {
 
           {/* Key Vault Vaulted Status Checklist */}
           <div className="p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/10 space-y-4 shadow-md">
-            <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">API Key Vault Status Matrix</div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-mono">
+            <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">
+              API Key Vault Status Matrix
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs font-mono">
               {Object.entries(vaultStatus).map(([prov, vaulted]) => (
-                <div key={prov} className="p-3 rounded-lg border border-zinc-900 bg-zinc-950/50 flex items-center justify-between">
+                <div
+                  key={prov}
+                  className="p-3 rounded-lg border border-zinc-900 bg-zinc-950/50 flex items-center justify-between"
+                >
                   <span className="capitalize">{prov}</span>
                   {vaulted ? (
                     <span className="flex items-center space-x-1 text-[10px] text-green-400">
@@ -243,9 +270,12 @@ export default function AdvancedSettingsView() {
               <span>Automated Edge Fallback Array Status</span>
             </div>
             <p className="text-[11px] text-zinc-500 leading-relaxed">
-              If no API key matches a request, the analysis pipeline automatically routes computation to your local engine loop via 
-              <code className="mx-1 px-1 py-0.5 bg-zinc-900 border border-zinc-800 rounded font-mono text-zinc-300">Ollama (qwen2.5-coder)</code>. 
-              This local pipeline keeps your processing 100% free and offline.
+              If no API key matches a request, the analysis pipeline automatically routes
+              computation to your local engine loop via{" "}
+              <code className="mx-1 px-1 py-0.5 bg-zinc-900 border border-zinc-800 rounded font-mono text-zinc-300">
+                Ollama (qwen2.5-coder)
+              </code>
+              . This local pipeline keeps your processing 100% free and offline.
             </p>
           </div>
         </div>
