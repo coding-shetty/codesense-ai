@@ -161,7 +161,7 @@ codesense-ai/
 │   │   │   └── history.py       # Per-user analysis history
 │   │   ├── core/
 │   │   │   ├── llm.py           # Multi-provider LLM routing + streaming
-│   │   │   ├── pipeline.py      # Analysis pipeline orchestration
+│   │   │   ├── pipeline.py      # Analysis pipeline orchestration helpers
 │   │   │   └── security.py      # Fernet-based key encryption
 │   │   ├── engines/
 │   │   │   ├── ast_parser.py    # Structural signature extraction
@@ -206,11 +206,15 @@ source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Create a `.env` file in `backend/` with at minimum:
+Create a `.env` file in `backend/` (copy from `.env.example`):
 
-```env
-ENCRYPTION_SECRET_KEY=<a-fernet-compatible-32-byte-key>
-DATABASE_URL=sqlite:///./codesense.db
+```bash
+cp .env.example .env
+# Edit .env and set at minimum:
+#   ENCRYPTION_SECRET_KEY=<generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())">
+#   DATABASE_URL=sqlite:///./codesense.db
+#   CORS_ORIGINS=http://localhost:3000
+#   API_AUTH_TOKEN=<optional — set to protect endpoints with Bearer auth>
 ```
 
 Run migrations and start the API:
@@ -227,6 +231,11 @@ The API will be live at `http://localhost:8000`, with interactive docs at `http:
 ```bash
 cd ../frontend
 npm install
+
+# Create a .env.local (copy from .env.local.example):
+cp .env.local.example .env.local
+# NEXT_PUBLIC_API_URL defaults to http://localhost:8000 if not set
+
 npm run dev
 ```
 
@@ -252,7 +261,9 @@ ollama pull qwen2.5-coder
 | `POST` | `/api/v1/settings/keys` | Stores an encrypted provider API key for a user. |
 | `POST` | `/api/v1/settings/update` | Updates a user's default provider/model preferences. |
 | `GET`  | `/api/v1/history/{user_id}` | Returns a user's past analysis runs. |
-| `GET`  | `/health` | Liveness check. |
+| `GET`  | `/health` | Liveness check (no auth required). |
+
+> **Authentication:** If `API_AUTH_TOKEN` is set in `backend/.env`, all endpoints (except `/health` and `/docs`) require an `Authorization: Bearer <token>` header. The frontend reads `NEXT_PUBLIC_API_AUTH_TOKEN` from `frontend/.env.local` to send this automatically.
 
 Full request/response schemas are available via the auto-generated OpenAPI docs at `/docs` once the backend is running.
 

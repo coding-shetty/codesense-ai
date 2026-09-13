@@ -1,6 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/repository/page": "app/repository/page.js",
-  "/history/page": "app/history/page.js",
-  "/settings/page": "app/settings/page.js"
-}
